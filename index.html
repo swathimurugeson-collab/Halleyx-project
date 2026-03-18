@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Workflow Engine</title>
+
+  <style>
+    body {
+      font-family: 'Segoe UI';
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      margin: 0;
+    }
+
+    header {
+      background: #222;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      width: 450px;
+      border-radius: 10px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    /* 🔥 NEW ALIGNMENT FIX */
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    .row input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+    }
+
+    .row button {
+      width: 80px;
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      background: #4facfe;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .row button:hover {
+      background: #007bff;
+    }
+
+    input {
+      width: 80%;
+      padding: 6px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+    }
+
+    button {
+      padding: 7px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background: #4facfe;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    button:hover { background: #007bff; }
+
+    .result-box {
+      background: #f5f5f5;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 12px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 6px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th { background: #4facfe; color: white; }
+
+    .edit-btn { background: orange; }
+    .delete-btn { background: red; }
+  </style>
+</head>
+
+<body>
+
+<header>🚀 Workflow Engine</header>
+
+<div class="container">
+
+  <!-- RUN -->
+  <div class="card">
+    <h3>Run Workflow</h3>
+
+    <!-- Step -->
+    <div class="row">
+      <input id="step" placeholder="step1">
+    </div>
+
+    <!-- Input + Button aligned -->
+    <div class="row">
+      <input id="input" placeholder="approved">
+      <button onclick="runWorkflow()">Run</button>
+    </div>
+
+    <div id="result" class="result-box"></div>
+  </div>
+
+  <!-- ADD RULE -->
+  <div class="card">
+    <h3>Add Rule</h3>
+    <input id="r_step" placeholder="step1">
+    <input id="r_condition" placeholder="approved">
+    <input id="r_next" placeholder="step2">
+    <button onclick="addRule()">Add Rule</button>
+  </div>
+
+  <!-- RULE TABLE -->
+  <div class="card">
+    <h3>Rules</h3>
+    <div id="rules" class="result-box"></div>
+  </div>
+
+</div>
+
+<script>
+
+async function runWorkflow() {
+  const step = document.getElementById("step").value;
+  const input = document.getElementById("input").value;
+
+  const res = await fetch(`http://localhost:5000/run?step_id=${step}&input=${input}`);
+  const data = await res.json();
+
+  document.getElementById("result").innerText =
+    data.workflow_path ? data.workflow_path.join(" → ") : "No path";
+}
+
+async function addRule() {
+  const step = document.getElementById("r_step").value;
+  const condition = document.getElementById("r_condition").value;
+  const next = document.getElementById("r_next").value;
+
+  if (!step || !condition || !next) {
+    alert("Fill all fields!");
+    return;
+  }
+
+  await fetch("http://localhost:5000/rule", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      step_id: step,
+      condition: condition,
+      next_step: next
+    })
+  });
+
+  alert("Rule Added ✅");
+  loadRules();
+}
+
+async function loadRules() {
+  const res = await fetch("http://localhost:5000/rule");
+  const data = await res.json();
+
+  let html = "<table><tr><th>Step</th><th>Cond</th><th>Next</th><th>Action</th></tr>";
+
+  data.forEach(r => {
+    html += `<tr>
+      <td>${r.step_id}</td>
+      <td>${r.condition}</td>
+      <td>${r.next_step}</td>
+      <td>
+        <button class="edit-btn" onclick="editRule('${r._id}')">Edit</button>
+        <button class="delete-btn" onclick="deleteRule('${r._id}')">Delete</button>
+      </td>
+    </tr>`;
+  });
+
+  html += "</table>";
+  document.getElementById("rules").innerHTML = html;
+}
+
+async function editRule(id) {
+  const condition = prompt("New condition:");
+  const next = prompt("New next step:");
+
+  await fetch(`http://localhost:5000/rule/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ condition: condition, next_step: next })
+  });
+
+  loadRules();
+}
+
+async function deleteRule(id) {
+  await fetch(`http://localhost:5000/rule/${id}`, {
+    method: "DELETE"
+  });
+
+  loadRules();
+}
+
+loadRules();
+
+</script>
+
+</body>
+</html>
