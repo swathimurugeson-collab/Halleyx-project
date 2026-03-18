@@ -12,18 +12,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ MongoDB Connection
 mongoose.connect("mongodb://127.0.0.1:27017/workflow")
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.log("❌ DB Error:", err));
+  .then(() => console.log(" MongoDB Connected"))
+  .catch(err => console.log(" DB Error:", err));
 
-// ✅ Home route
 app.get("/", (req, res) => {
   res.send("Workflow Engine Running");
 });
 
-
-// ================= WORKFLOW APIs =================
 app.post("/workflow", async (req, res) => {
   try {
     const workflow = new Workflow(req.body);
@@ -52,8 +48,6 @@ app.get("/add", async (req, res) => {
   res.send("Workflow Added");
 });
 
-
-// ================= STEP APIs =================
 app.post("/step", async (req, res) => {
   try {
     const step = new Step(req.body);
@@ -81,34 +75,29 @@ app.get("/addstep", async (req, res) => {
   res.send("Step Added");
 });
 
-
-// ================= RULE APIs =================
-
-// 🔥 FIXED + DEBUG VERSION
 app.post("/rule", async (req, res) => {
   try {
-    console.log("👉 DATA RECEIVED:", req.body); // DEBUG
+    console.log(" DATA RECEIVED:", req.body); // DEBUG
 
     const { step_id, condition, next_step } = req.body;
 
-    // 🔥 validation
     if (!step_id || !condition || !next_step) {
       return res.status(400).json({ message: "Missing fields" });
     }
 
     const rule = new Rule({
       step_id: step_id.trim(),
-      condition: condition.trim().toLowerCase(), // 🔥 important
+      condition: condition.trim().toLowerCase(), 
       next_step: next_step.trim()
     });
 
     await rule.save();
 
-    console.log("✅ SAVED SUCCESS"); // DEBUG
+    console.log(" SAVED SUCCESS"); 
 
     res.json(rule);
   } catch (error) {
-    console.log("❌ ERROR:", error);
+    console.log(" ERROR:", error);
     res.status(500).send(error);
   }
 });
@@ -134,8 +123,6 @@ app.get("/clearrule", async (req, res) => {
   res.send("All rules deleted");
 });
 
-
-// ✅ EDIT
 app.put("/rule/:id", async (req, res) => {
   try {
     const { condition, next_step } = req.body;
@@ -155,7 +142,6 @@ app.put("/rule/:id", async (req, res) => {
   }
 });
 
-// ✅ DELETE
 app.delete("/rule/:id", async (req, res) => {
   try {
     await Rule.findByIdAndDelete(req.params.id);
@@ -164,9 +150,6 @@ app.delete("/rule/:id", async (req, res) => {
     res.status(500).send(err);
   }
 });
-
-
-// ================= EXECUTION APIs =================
 
 app.get("/execute", async (req, res) => {
   try {
@@ -192,8 +175,6 @@ app.get("/execute", async (req, res) => {
   }
 });
 
-
-// 🔥 MAIN RUN FIXED
 app.get("/run", async (req, res) => {
   try {
     let currentStep = req.query.step_id?.trim();
@@ -204,7 +185,7 @@ app.get("/run", async (req, res) => {
     while (currentStep) {
       path.push(currentStep);
 
-      console.log("➡️ Checking:", currentStep, input); // DEBUG
+      console.log(" Checking:", currentStep, input); // DEBUG
 
       const rule = await Rule.findOne({
         step_id: currentStep,
@@ -212,11 +193,11 @@ app.get("/run", async (req, res) => {
       });
 
       if (!rule) {
-        console.log("⛔ No rule found");
+        console.log(" No rule found");
         break;
       }
 
-      console.log("✅ Next step:", rule.next_step);
+      console.log(" Next step:", rule.next_step);
 
       currentStep = rule.next_step;
     }
@@ -239,8 +220,6 @@ app.get("/run", async (req, res) => {
   }
 });
 
-
-// ================= HISTORY =================
 app.get("/execution", async (req, res) => {
   const data = await Execution.find();
   res.json(data);
