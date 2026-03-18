@@ -35,7 +35,6 @@
       text-align: center;
     }
 
-    /* 🔥 NEW ALIGNMENT FIX */
     .row {
       display: flex;
       justify-content: center;
@@ -119,20 +118,17 @@
 
 <body>
 
-<header>🚀 Workflow Engine</header>
+<header>  Workflow Engine</header>
 
 <div class="container">
-
-  <!-- RUN -->
+  
   <div class="card">
     <h3>Run Workflow</h3>
 
-    <!-- Step -->
     <div class="row">
       <input id="step" placeholder="step1">
     </div>
 
-    <!-- Input + Button aligned -->
     <div class="row">
       <input id="input" placeholder="approved">
       <button onclick="runWorkflow()">Run</button>
@@ -141,7 +137,6 @@
     <div id="result" class="result-box"></div>
   </div>
 
-  <!-- ADD RULE -->
   <div class="card">
     <h3>Add Rule</h3>
     <input id="r_step" placeholder="step1">
@@ -150,7 +145,6 @@
     <button onclick="addRule()">Add Rule</button>
   </div>
 
-  <!-- RULE TABLE -->
   <div class="card">
     <h3>Rules</h3>
     <div id="rules" class="result-box"></div>
@@ -191,7 +185,7 @@ async function addRule() {
     })
   });
 
-  alert("Rule Added ✅");
+  alert("Rule Added ");
   loadRules();
 }
 
